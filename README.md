@@ -1,0 +1,182 @@
+# Hello World GCP Cloud Run Module
+
+A comprehensive, production-ready Hello World application deployed on Google Cloud Platform using Cloud Run and Terraform, showcasing enterprise-grade security and monitoring features.
+
+## Architecture
+
+- **Application**: Enhanced Next.js app with system monitoring
+- **Container Registry**: Google Artifact Registry
+- **Deployment**: Google Cloud Run with auto-scaling
+- **Load Balancer**: Global HTTP(S) Load Balancer
+- **Security**: Cloud Armor with DDoS protection and rate limiting
+- **Infrastructure**: Terraform with enterprise best practices
+- **Monitoring**: Built-in health checks and system metrics
+
+## Project Structure
+
+```
+├── infra/                    # Terraform infrastructure code
+│   ├── artifact_registry.tf  # Container registry configuration
+│   ├── backend.tf            # Terraform backend and providers
+│   ├── cloud_armor.tf        # Security policies and DDoS protection
+│   ├── cloud_run.tf          # Cloud Run service configuration
+│   ├── dockerfile            # Multi-stage Docker build
+│   ├── iam.tf               # Service accounts and permissions
+│   ├── load_balancer.tf      # Global load balancer and SSL
+│   ├── outputs.tf           # Infrastructure outputs
+│   ├── variables.tf         # Variable definitions
+│   └── vars/
+│       └── dev.tfvars       # Environment-specific values
+├── src/                     # Next.js application source
+│   ├── app/
+│   │   ├── api/             # API endpoints for system info
+│   │   ├── health/          # Health check dashboard
+│   │   ├── page.tsx         # Enhanced main dashboard
+│   │   └── layout.tsx       # Application layout
+├── package.json             # Application dependencies
+├── next.config.ts           # Next.js configuration
+└── tsconfig.json           # TypeScript configuration
+```
+
+## Quick Start
+
+### 🏠 Local Development
+
+1. **Install Dependencies**
+   ```bash
+   npm install
+   ```
+
+2. **Run Development Server**
+   ```bash
+   npm run dev
+   ```
+   The application will be available at `http://localhost:3000`
+
+3. **Build for Production (Optional)**
+   ```bash
+   npm run build
+   npm start
+   ```
+
+4. **Test with Docker (Optional)**
+   ```bash
+   # Build Docker image locally
+   docker build -f infra/dockerfile -t hello-world-local .
+
+   # Run container locally
+   docker run -p 3000:3000 hello-world-local
+   ```
+
+### ☁️ GCP Deployment
+
+1. **Prerequisites**
+   - Install [Google Cloud CLI](https://cloud.google.com/sdk/docs/install)
+   - Install [Terraform](https://terraform.io/downloads)
+   - Install [Docker](https://docs.docker.com/get-docker/)
+   - Authenticate with GCP: `gcloud auth login`
+   - Set your project: `gcloud config set project YOUR_PROJECT_ID`
+
+2. **Update Configuration**
+   ```bash
+   cd infra/
+   # Edit vars/dev.tfvars with your GCP project details
+   ```
+
+3. **Deploy Infrastructure**
+   ```bash
+   terraform init
+   terraform plan -var-file=vars/dev.tfvars
+   terraform apply -var-file=vars/dev.tfvars
+   ```
+
+4. **Build and Deploy Application**
+   ```bash
+   # Build Docker image
+   IMAGE_NAME="europe-west2-docker.pkg.dev/YOUR_PROJECT/hello-world-repo/hello-world-app:latest"
+   docker build -f infra/dockerfile -t $IMAGE_NAME .
+
+   # Configure Docker for Artifact Registry
+   gcloud auth configure-docker europe-west2-docker.pkg.dev
+
+   # Push to Artifact Registry
+   docker push $IMAGE_NAME
+
+   # Application is automatically deployed via Terraform
+   ```
+
+## Configuration
+
+### Required Variables (vars/dev.tfvars)
+
+```hcl
+project_id               = "your-gcp-project-id"
+region                  = "europe-west2"
+zone                    = "europe-west2-a"
+environment             = "dev"
+repository_id           = "hello-world-repo"
+service_name            = "hello-world-app-dev"
+service_account_name    = "sa-hello-world-dev"
+container_image         = "europe-west2-docker.pkg.dev/your-project/hello-world-repo/hello-world-app:latest"
+container_port          = 3000
+min_instance_count      = 1
+max_instance_count      = 3
+```
+
+## Features Showcase
+
+### 🛡️ Security Features
+- **Cloud Armor**: DDoS protection, rate limiting, geo-blocking
+- **SSL/TLS**: Managed certificates with automatic renewal
+- **IAM**: Least-privilege service account permissions
+- **Container Security**: Non-root user, minimal Alpine base
+- **Network Security**: Private Cloud Run with load balancer ingress
+
+### 📊 Monitoring & Observability
+- **Health Checks**: Comprehensive system health monitoring
+- **System Metrics**: Real-time performance and resource usage
+- **Request Tracking**: Client information and visit counters
+- **Environment Info**: Deployment details and configuration
+- **API Endpoints**: RESTful endpoints for system information
+
+### 🚀 Performance Features
+- **Auto-scaling**: 1-3 instances based on demand
+- **Global Load Balancer**: Worldwide content delivery
+- **Container Optimization**: Multi-stage Docker builds
+- **Caching**: Efficient resource utilization
+
+## Local Development Features
+
+When running locally, the application provides:
+
+- **System Information**: Shows local development environment details
+- **Health Checks**: Simulated health status and metrics
+- **API Endpoints**: All endpoints work with mock data
+- **Hot Reload**: Next.js development server with instant updates
+- **TypeScript**: Full type checking and IntelliSense support
+
+### Available Routes
+- `/` - Main dashboard with system information
+- `/health` - Health check page with component status
+- `/api/system-info` - System information JSON endpoint
+- `/api/test-endpoint` - Test endpoint for Cloud Armor simulation
+
+## Best Practices Implemented
+
+- **Terraform**: Separate files for logical components, no default values in variables.tf
+- **Docker**: Multi-stage builds, security scanning, minimal dependencies
+- **Infrastructure**: Modular design, proper resource naming, comprehensive outputs
+- **Application**: Production-ready Next.js configuration with standalone output
+
+## Monitoring & Logs
+
+Access logs and metrics through:
+- Google Cloud Console > Cloud Run
+- Google Cloud Console > Cloud Logging
+- Google Cloud Console > Cloud Monitoring
+
+## Cleanup
+
+```bash
+terraform destroy -var-file=vars/dev.tfvars
+```
