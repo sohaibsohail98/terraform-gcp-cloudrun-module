@@ -1,0 +1,116 @@
+name: Terraform Validation and Plan - Hello World App
+
+on:
+  pull_request:
+    branches: ["main"]
+    paths:
+      - "**.tf"
+      - "**.tfvars"
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Environment to deploy (dev/prod)"
+        required: true
+        default: "dev"
+        type: choice
+        options:
+          - dev
+          - prod
+
+env:
+  WORKING_DIR: ./infra
+  TF_VAR_env: ${{ github.event_name == 'workflow_dispatch' && inputs.environment || 'dev' }}
+
+jobs:
+  terraform-validate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+      security-events: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          project_id: ${{ vars.GCP_PROJECT_ID }}
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_wrapper: false
+
+      - name: Terraform Init, Fmt, and Validate
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          terraform init -backend-config="prefix=terraform/state/hello-world-app"
+          terraform fmt -recursive -check -no-color
+          terraform validate -no-color
+
+      - name: Install TFLint
+        run: |
+          curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | bash
+
+      - name: TFLint init
+        run: tflint --init --config=./.tflint.hcl
+
+      - name: Run TFLint
+        id: run_tflint
+        run: |
+          # Run TFLint and capture output
+          tflint --recursive --format=default > tflint_report.xml
+          chmod +x tflint.sh
+          ./tflint.sh
+
+      - name: Publish TFLint Report
+        uses: actions/upload-artifact@v4
+        if: ${{ steps.run_tflint.outputs.publish_tflint == 'true' }}
+        with:
+          name: tflintReport
+          path: ./tflint_report.xml
+
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.8
+
+      - name: Test with Checkov
+        id: checkov
+        uses: bridgecrewio/checkov-action@master
+        with:
+          directory: ${{ env.WORKING_DIR }}
+          framework: terraform
+          output_format: cli,json
+          output_file_path: console,checkov-results.json
+          download_external_modules: true
+          soft_fail: true
+          skip_check: CKV_GCP_84
+
+      - name: Publish Checkov Report
+        uses: actions/upload-artifact@v4
+        if: success() || failure()
+        with:
+          name: CheckovReport
+          path: checkov-results.json
+          retention-days: 7
+
+      - name: Terraform Plan
+        if: success()
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          terraform plan \
+          -var-file="vars/${{ env.TF_VAR_env }}.tfvars" -out=plan.tfplan
+
+      - name: Upload Terraform Plan
+        uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: terraform-plan
+          path: ${{ env.WORKING_DIR }}/plan.tfplan
+          retention-days: 7

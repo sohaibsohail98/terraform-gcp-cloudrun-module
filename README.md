@@ -2,6 +2,8 @@
 
 A comprehensive, production-ready Hello World application deployed on Google Cloud Platform using Cloud Run and Terraform, showcasing enterprise-grade security and monitoring features.
 
+![Hello World GCP Application](./images/HelloWorldGCP-Image.png)
+
 ## Architecture
 
 - **Application**: Enhanced Next.js app with system monitoring
@@ -12,9 +14,21 @@ A comprehensive, production-ready Hello World application deployed on Google Clo
 - **Infrastructure**: Terraform with enterprise best practices
 - **Monitoring**: Built-in health checks and system metrics
 
+### Container Architecture Diagram
+
+![GCP Hello World Container Architecture](./images/GCP%20Hello%20World%20Container%20App.jpeg)
+
+*Complete infrastructure overview showing Cloud Run, Load Balancer, Cloud Armor, and security components*
+
 ## Project Structure
 
 ```
+├── .github/                 # GitHub Actions CI/CD workflows
+│   └── workflows/
+│       ├── deploy.yml       # Production deployment pipeline
+│       ├── terraform-plan.yml # Infrastructure validation
+│       ├── dockerfile-validation.yml # Docker security scanning
+│       └── pythonformatting.yml # Code quality checks
 ├── infra/                    # Terraform infrastructure code
 │   ├── artifact_registry.tf  # Container registry configuration
 │   ├── backend.tf            # Terraform backend and providers
@@ -35,6 +49,8 @@ A comprehensive, production-ready Hello World application deployed on Google Clo
 │   │   └── layout.tsx       # Application layout
 ├── package.json             # Application dependencies
 ├── next.config.ts           # Next.js configuration
+├── tailwind.config.js       # Tailwind CSS configuration
+├── postcss.config.mjs       # PostCSS configuration
 └── tsconfig.json           # TypeScript configuration
 ```
 
@@ -144,6 +160,13 @@ max_instance_count      = 3
 - **Global Load Balancer**: Worldwide content delivery
 - **Container Optimization**: Multi-stage Docker builds
 - **Caching**: Efficient resource utilization
+
+### 🔄 CI/CD Pipeline
+- **Automated Deployment**: GitHub Actions for seamless deployments
+- **Infrastructure Validation**: Terraform plan and validation on PRs
+- **Security Scanning**: Docker image vulnerability scanning with Trivy
+- **Code Quality**: ESLint, Prettier, and TypeScript checks
+- **Multi-Environment**: Support for dev/prod environments
 
 ## Local Development Features
 

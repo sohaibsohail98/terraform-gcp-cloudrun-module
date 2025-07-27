@@ -105,3 +105,8 @@ coverage/
 # Misc
 .eslintcache
 .stylelintcache
+
+# Generated files
+*.generated.*
+.turbo/
+.claude/
