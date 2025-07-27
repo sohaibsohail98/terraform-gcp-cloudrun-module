@@ -2,11 +2,11 @@ resource "google_cloud_run_v2_service" "hello_world_service" {
   name     = var.service_name
   location = var.region
   ingress  = "INGRESS_TRAFFIC_INTERNAL_LOAD_BALANCER" # Traffic via load balancer only
-  
+
   template {
     containers {
       image = var.container_image
-      
+
       ports {
         container_port = var.container_port
       }
@@ -24,7 +24,7 @@ resource "google_cloud_run_v2_service" "hello_world_service" {
           port = var.container_port
         }
       }
-      
+
       resources {
         limits = {
           cpu    = "1000m"
@@ -32,7 +32,7 @@ resource "google_cloud_run_v2_service" "hello_world_service" {
         }
       }
     }
-    
+
     scaling {
       min_instance_count = var.min_instance_count
       max_instance_count = var.max_instance_count

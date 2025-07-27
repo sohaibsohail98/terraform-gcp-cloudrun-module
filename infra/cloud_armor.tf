@@ -14,6 +14,8 @@ resource "google_compute_security_policy" "default" {
     }
     description = "Default allow with rate limiting"
     rate_limit_options {
+      conform_action = "allow"
+      exceed_action  = "deny(429)"
       rate_limit_threshold {
         count        = 100
         interval_sec = 60
@@ -49,6 +51,8 @@ resource "google_compute_security_policy" "default" {
     }
     description = "Rate limit API endpoints"
     rate_limit_options {
+      conform_action = "allow"
+      exceed_action  = "deny(429)"
       rate_limit_threshold {
         count        = 50
         interval_sec = 60
